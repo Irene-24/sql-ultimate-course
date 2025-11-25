@@ -67,6 +67,44 @@ SELECT
     DAY(CreationTime) AS Day
 FROM Sales.Orders;
 
+
+-- PostGres Equivalents:
+SELECT
+    orders.orderid,
+    orders.creationtime,
+
+    -- DATETRUNC
+    DATE_TRUNC('year', orders.creationtime)   AS year_dt,
+    DATE_TRUNC('day', orders.creationtime)    AS day_dt,
+    DATE_TRUNC('minute', orders.creationtime) AS minute_dt,
+
+    -- TO_CHAR instead of DATENAME (Postgres equivalent)
+    TO_CHAR(orders.creationtime, 'Month') AS month_dn,
+    TO_CHAR(orders.creationtime, 'Day')   AS weekday_dn,
+    TO_CHAR(orders.creationtime, 'DD')    AS day_dn,
+    TO_CHAR(orders.creationtime, 'YYYY')  AS year_dn,
+
+    -- EXTRACT instead of DATEPART (Postgres equivalent)
+    EXTRACT(YEAR    FROM orders.creationtime) AS year_dp,
+    EXTRACT(MONTH   FROM orders.creationtime) AS month_dp,
+    EXTRACT(DAY     FROM orders.creationtime) AS day_dp,
+    EXTRACT(HOUR    FROM orders.creationtime) AS hour_dp,
+    EXTRACT(QUARTER FROM orders.creationtime) AS quarter_dp,
+    EXTRACT(WEEK    FROM orders.creationtime) AS week_dp,
+
+    -- SQL Server style YEAR(), MONTH(), DAY() equivalents
+    EXTRACT(YEAR  FROM orders.creationtime) AS YEAR,
+    EXTRACT(MONTH FROM orders.creationtime) AS MONTH,
+    EXTRACT(DAY   FROM orders.creationtime) AS DAY
+
+FROM sales.orders AS orders;
+
+
+
+-- SELECT
+--     *
+-- FROM o.orders;
+
 /* ==============================================================================
    DATETRUNC() DATA AGGREGATION
 ===============================================================================*/
@@ -92,6 +130,16 @@ SELECT
     CreationTime,
     EOMONTH(CreationTime) AS EndOfMonth
 FROM Sales.Orders;
+
+
+-- PostGres Equivalent:
+SELECT o.orderid AS order_id,
+o.creationtime AS created_at,
+DATE_TRUNC('month', o.creationtime) 
+    + INTERVAL '1 month' 
+    - INTERVAL '1 day' AS end_of_month
+FROM sales.orders AS o
+
 
 /* ==============================================================================
    DATE PARTS | USE CASES
@@ -219,6 +267,22 @@ SELECT
     DATEADD(month, 3, OrderDate) AS ThreeMonthsLater,
     DATEADD(year, 2, OrderDate) AS TwoYearsLater
 FROM Sales.Orders;
+
+
+-- PostGres Equivalent:
+SELECT
+    EmployeeID,
+    BirthDate,
+    NOW() AS now,
+    AGE(NOW(), BirthDate) AS age_interval_full,
+    EXTRACT(YEAR FROM AGE(NOW(), BirthDate)) AS age_interval_year,
+     EXTRACT(YEAR FROM NOW()) - EXTRACT(YEAR FROM BirthDate)
+      - CASE
+          WHEN TO_CHAR(NOW(), 'MMDD') < TO_CHAR(BirthDate, 'MMDD') THEN 1
+          ELSE 0
+        END AS age_calculated
+FROM Sales.Employees;
+
 
 /* TASK 15:
    Calculate the age of employees.
